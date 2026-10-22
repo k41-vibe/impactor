@@ -126,6 +126,13 @@ pub const LOOKUP_CLIENT_INFO: &str =
     "<MacBookPro13,2> <macOS;13.1;22C65> <com.apple.AuthKit/1 (com.apple.akd/1.0)>";
 pub const CLIENT_INFO_HEADER: &str =
     "<PC> <Windows;6.2(0,0);9200> <com.apple.AuthKit/1 (com.apple.iTunes/12.12.4.1)>";
+// Apple blocks client info strings one by one, so allow trying another without a rebuild.
+pub fn client_info_header() -> String {
+    match std::env::var("PLUME_CLIENT_INFO") {
+        Ok(v) if !v.is_empty() && v != "server" => v,
+        _ => CLIENT_INFO_HEADER.to_string(),
+    }
+}
 pub const DS_ID: i64 = -2;
 pub const IDENTIFIER_LENGTH: usize = 16;
 pub type Identifier = [u8; IDENTIFIER_LENGTH];
@@ -234,7 +241,7 @@ impl dyn ADIProxy {
         let response = client
             .post(start_provisioning_url)
             .body(sp_request)
-            .header("X-Mme-Client-Info", CLIENT_INFO_HEADER)
+            .header("X-Mme-Client-Info", client_info_header())
             .send()
             .await?
             .plist()
@@ -268,7 +275,7 @@ impl dyn ADIProxy {
         let response = client
             .post(finish_provisioning_url)
             .body(fp_request)
-            .header("X-Mme-Client-Info", CLIENT_INFO_HEADER)
+            .header("X-Mme-Client-Info", client_info_header())
             .send()
             .await?
             .plist()
@@ -372,7 +379,7 @@ impl<ProxyType: ADIProxy + 'static> AnisetteHeadersProvider
         );
         headers.insert(
             "X-Mme-Client-Info".to_string(),
-            CLIENT_INFO_HEADER.to_string(),
+            client_info_header(),
         );
         headers.insert(
             "X-Mme-Device-Id".to_string(),

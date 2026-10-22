@@ -2,7 +2,7 @@
 
 use std::{collections::HashMap, fs, io::Cursor, path::PathBuf};
 
-use crate::adi_proxy::{CLIENT_INFO_HEADER, LOOKUP_CLIENT_INFO};
+use crate::adi_proxy::{LOOKUP_CLIENT_INFO, client_info_header};
 use async_trait::async_trait;
 use base64::Engine;
 use base64::engine::general_purpose;
@@ -194,7 +194,10 @@ impl AnisetteClient {
             .await?
             .json::<AnisetteClientInfo>()
             .await?;
-        client_info.client_info = CLIENT_INFO_HEADER.to_string();
+        // PLUME_CLIENT_INFO=server keeps the string the anisette server reports for its own device.
+        if std::env::var("PLUME_CLIENT_INFO").as_deref() != Ok("server") {
+            client_info.client_info = client_info_header();
+        }
         Ok(AnisetteClient { client_info, url })
     }
 
