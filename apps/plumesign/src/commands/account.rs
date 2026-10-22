@@ -153,7 +153,9 @@ async fn login(args: LoginArgs) -> Result<()> {
             TwoFactorMethod::Device if can_use_sms => {
                 log::info!("Enter the code sent to your device, or type 'sms' to receive it by text message: ")
             }
-            TwoFactorMethod::Device => log::info!("Enter 2FA code: "),
+            TwoFactorMethod::Device => {
+                log::info!("Enter 2FA code, or type 'sms' to try a text message to the first trusted number: ")
+            }
         }
 
         let mut input = String::new();
@@ -162,9 +164,11 @@ async fn login(args: LoginArgs) -> Result<()> {
             .map_err(|e| e.to_string())?;
         let input = input.trim();
 
-        if input.eq_ignore_ascii_case("sms") && can_use_sms {
-            let id = if req.trusted_phone_numbers.len() == 1 {
-                req.trusted_phone_numbers[0].id
+        if input.eq_ignore_ascii_case("sms") {
+            // The phone list can come back empty when the auth extras request fails;
+            // fall back to id 1 like the NeedsSMS2FA path in plume_core login.rs does.
+            let id = if req.trusted_phone_numbers.len() <= 1 {
+                req.trusted_phone_numbers.first().map(|p| p.id).unwrap_or(1)
             } else {
                 let labels: Vec<String> = req
                     .trusted_phone_numbers

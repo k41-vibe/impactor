@@ -76,15 +76,17 @@ impl Account {
                 LoginState::NeedsDevice2FA => {
                     response = _self.send_2fa_to_devices().await?;
                     if trusted_phone_numbers.is_empty() {
-                        if let Ok(extras) = _self.get_auth_extras().await {
-                            trusted_phone_numbers = extras.trusted_phone_numbers;
+                        match _self.get_auth_extras().await {
+                            Ok(extras) => trusted_phone_numbers = extras.trusted_phone_numbers,
+                            Err(e) => log::warn!("Failed to fetch trusted phone numbers: {e}"),
                         }
                     }
                 }
                 LoginState::Needs2FAVerification => {
                     if trusted_phone_numbers.is_empty() {
-                        if let Ok(extras) = _self.get_auth_extras().await {
-                            trusted_phone_numbers = extras.trusted_phone_numbers;
+                        match _self.get_auth_extras().await {
+                            Ok(extras) => trusted_phone_numbers = extras.trusted_phone_numbers,
+                            Err(e) => log::warn!("Failed to fetch trusted phone numbers: {e}"),
                         }
                     }
                     let request = TwoFactorRequest {
@@ -104,8 +106,9 @@ impl Account {
                 }
                 LoginState::NeedsSMS2FA => {
                     if trusted_phone_numbers.is_empty() {
-                        if let Ok(extras) = _self.get_auth_extras().await {
-                            trusted_phone_numbers = extras.trusted_phone_numbers;
+                        match _self.get_auth_extras().await {
+                            Ok(extras) => trusted_phone_numbers = extras.trusted_phone_numbers,
+                            Err(e) => log::warn!("Failed to fetch trusted phone numbers: {e}"),
                         }
                     }
                     let id = trusted_phone_numbers.first().map(|p| p.id).unwrap_or(1);
