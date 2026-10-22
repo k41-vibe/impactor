@@ -198,6 +198,9 @@ impl AnisetteClient {
         if std::env::var("PLUME_CLIENT_INFO").as_deref() != Ok("server") {
             client_info.client_info = client_info_header();
         }
+        if let Ok(ua) = std::env::var("PLUME_USER_AGENT") {
+            client_info.user_agent = ua;
+        }
         Ok(AnisetteClient { client_info, url })
     }
 

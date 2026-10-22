@@ -35,7 +35,12 @@ impl Account {
         gsa_headers.insert("Accept", HeaderValue::from_str("*/*").unwrap());
         gsa_headers.insert(
             "User-Agent",
-            HeaderValue::from_str("akd/1.0 CFNetwork/978.0.7 Darwin/18.7.0").unwrap(),
+            // PLUME_USER_AGENT overrides this, for the same reason as PLUME_CLIENT_INFO in omnisette.
+            HeaderValue::from_str(
+                &std::env::var("PLUME_USER_AGENT")
+                    .unwrap_or_else(|_| "akd/1.0 CFNetwork/978.0.7 Darwin/18.7.0".to_string()),
+            )
+            .unwrap(),
         );
         gsa_headers.insert(
             "X-MMe-Client-Info",
