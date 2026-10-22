@@ -220,10 +220,10 @@ fn collect_embeded_bundles_from_dir(dir: &PathBuf) -> Result<Vec<Bundle>, Error>
                 if let Ok(bundle) = Bundle::new(&path) {
                     bundles.push(bundle.clone());
 
-                    if bundle.bundle_type != BundleType::App {
-                        if let Ok(embedded) = bundle.collect_nested_bundles() {
-                            bundles.extend(embedded);
-                        }
+                    // Nested apps are watch apps (Watch/*.app); their Frameworks and
+                    // extensions need signing as much as the parent's do.
+                    if let Ok(embedded) = bundle.collect_nested_bundles() {
+                        bundles.extend(embedded);
                     }
                     continue;
                 }
