@@ -447,7 +447,9 @@ impl Signer {
             }
         }
 
-        if self.options.mode != SignerMode::Adhoc {
+        // A dylib or framework that carries even an empty entitlements blob is rejected by
+        // AMFI when loaded from outside the bundle ("has entitlements but is not a main binary").
+        if self.options.mode != SignerMode::Adhoc && bundle.bundle_type().should_have_entitlements() {
             if self.options.embedding.single_profile {
                 if let Some(ent_path) = &self.options.custom_entitlements {
                     let ent_bytes = std::fs::read(ent_path)?;
